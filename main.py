@@ -1,42 +1,33 @@
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-
-import os
+from gmail_service import authenticate, get_recent_emails
 
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+def main():
 
+    print("Starting Gmail Digest...")
 
-def authenticate():
-    creds = None
+    # Authenticate with Gmail
+    service = authenticate()
 
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file(
-            "token.json",
-            SCOPES
-        )
+    print("Gmail authentication successful!")
+    print()
 
-    if not creds or not creds.valid:
+    # Fetch recent emails
+    emails = get_recent_emails(service, max_results=10)
 
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+    print(f"Found {len(emails)} emails")
+    print("-" * 60)
 
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                "credentials.json",
-                SCOPES
-            )
+    for email in emails:
 
-            creds = flow.run_local_server(port=0)
+        print(f"From: {email['from']}")
+        print(f"Subject: {email['subject']}")
+        print(f"Date: {email['date']}")
+        print(f"Snippet: {email['snippet']}")
+        print(f"Message ID: {email['id']}")
+        print(f"Thread ID: {email['thread_id']}")
 
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
-
-    return creds
+        print("-" * 60)
 
 
 if __name__ == "__main__":
-    credentials = authenticate()
-
-    print("Gmail authentication successful!")
+    main()
